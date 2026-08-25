@@ -4,7 +4,16 @@
 
 ## OpenCode plugin
 
-The plugin entrypoint is `src/index.tsx`. Once registered in OpenCode's global `plugin` configuration, run:
+Install the repository and register its TUI package entrypoint in OpenCode's global `tui.json` configuration:
+
+```json
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "plugin": ["github:mhoc/opencode-usage"]
+}
+```
+
+Then run:
 
 ```text
 /usagex
