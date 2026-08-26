@@ -1,15 +1,15 @@
 // @bun
 // src/index.tsx
-import { use as _$use } from "@opentui/solid";
-import { createComponent as _$createComponent } from "@opentui/solid";
-import { createTextNode as _$createTextNode } from "@opentui/solid";
-import { effect as _$effect } from "@opentui/solid";
-import { insertNode as _$insertNode } from "@opentui/solid";
-import { insert as _$insert } from "@opentui/solid";
-import { memo as _$memo } from "@opentui/solid";
-import { setProp as _$setProp } from "@opentui/solid";
-import { createElement as _$createElement } from "@opentui/solid";
-import { createResource, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { use as _$use } from "opentui:runtime-module:%40opentui%2Fsolid";
+import { createComponent as _$createComponent } from "opentui:runtime-module:%40opentui%2Fsolid";
+import { createTextNode as _$createTextNode } from "opentui:runtime-module:%40opentui%2Fsolid";
+import { effect as _$effect } from "opentui:runtime-module:%40opentui%2Fsolid";
+import { insertNode as _$insertNode } from "opentui:runtime-module:%40opentui%2Fsolid";
+import { insert as _$insert } from "opentui:runtime-module:%40opentui%2Fsolid";
+import { memo as _$memo } from "opentui:runtime-module:%40opentui%2Fsolid";
+import { setProp as _$setProp } from "opentui:runtime-module:%40opentui%2Fsolid";
+import { createElement as _$createElement } from "opentui:runtime-module:%40opentui%2Fsolid";
+import { createResource, createSignal, For, onCleanup, onMount, Show } from "opentui:runtime-module:solid-js";
 
 // src/usage.ts
 import { Database } from "bun:sqlite";
@@ -87,7 +87,10 @@ async function loadCodexReport() {
     return;
   const fetchedAt = Date.now();
   if (!auth.access || auth.expires <= fetchedAt) {
-    return { fetchedAt, error: "OpenAI sign-in has expired. Reconnect OpenAI in OpenCode." };
+    return {
+      fetchedAt,
+      error: "OpenAI sign-in has expired. Reconnect OpenAI in OpenCode."
+    };
   }
   try {
     const headers = {
@@ -103,22 +106,42 @@ async function loadCodexReport() {
     });
     if (!response.ok) {
       const message = response.status === 401 || response.status === 403 ? "OpenAI did not authorize Codex usage access. Reconnect OpenAI in OpenCode." : `OpenAI returned HTTP ${response.status}`;
-      return { fetchedAt, error: message };
+      return {
+        fetchedAt,
+        error: message
+      };
     }
-    return { fetchedAt, usage: parseCodexUsage(await response.json()) };
+    return {
+      fetchedAt,
+      usage: parseCodexUsage(await response.json())
+    };
   } catch (error) {
-    return { fetchedAt, error: error instanceof Error ? error.message : "Could not load Codex usage" };
+    return {
+      fetchedAt,
+      error: error instanceof Error ? error.message : "Could not load Codex usage"
+    };
   }
 }
 
 // src/usage.ts
 var PRICING_URL = "https://models.dev/api.json";
-var WINDOWS = [
-  { id: "day", label: "Day", seconds: 24 * 60 * 60 },
-  { id: "week", label: "Week", seconds: 7 * 24 * 60 * 60 },
-  { id: "month", label: "Month", seconds: 30 * 24 * 60 * 60 },
-  { id: "all", label: "All Time", seconds: null }
-];
+var WINDOWS = [{
+  id: "day",
+  label: "Day",
+  seconds: 24 * 60 * 60
+}, {
+  id: "week",
+  label: "Week",
+  seconds: 7 * 24 * 60 * 60
+}, {
+  id: "month",
+  label: "Month",
+  seconds: 30 * 24 * 60 * 60
+}, {
+  id: "all",
+  label: "All Time",
+  seconds: null
+}];
 var TOKEN_FIELDS = ["input", "output", "reasoning", "cacheRead", "cacheWrite"];
 var PRICING_TTL = 60 * 60 * 1000;
 var pricingCache;
@@ -130,7 +153,10 @@ function defaultDatabasePath() {
   return join2(dataHome, "opencode", "opencode.db");
 }
 function readUsage(dbPath) {
-  const db = new Database(dbPath, { readonly: true, strict: true });
+  const db = new Database(dbPath, {
+    readonly: true,
+    strict: true
+  });
   try {
     const rows = db.query(`
           SELECT
@@ -171,7 +197,10 @@ async function loadPricing(url) {
   if (pricingCache?.url === url && pricingCache.expiresAt > Date.now())
     return pricingCache.data;
   const response = await fetch(url, {
-    headers: { Accept: "application/json", "User-Agent": "opencode-usagex/0.1" },
+    headers: {
+      Accept: "application/json",
+      "User-Agent": "opencode-usagex/0.1"
+    },
     signal: AbortSignal.timeout(20000)
   });
   if (!response.ok)
@@ -179,7 +208,11 @@ async function loadPricing(url) {
   const data = await response.json();
   if (!isRecord2(data))
     throw new Error("models.dev returned an unexpected response");
-  pricingCache = { url, expiresAt: Date.now() + PRICING_TTL, data };
+  pricingCache = {
+    url,
+    expiresAt: Date.now() + PRICING_TTL,
+    data
+  };
   return data;
 }
 function resolveModel(pricing, provider, model) {
@@ -193,16 +226,24 @@ function resolveModel(pricing, provider, model) {
     const modelData = providerData.models[candidate];
     if (!isRecord2(modelData) || !isRecord2(modelData.cost))
       continue;
-    return { modelData, source: `${provider}/${candidate}` };
+    return {
+      modelData,
+      source: `${provider}/${candidate}`
+    };
   }
   return {};
 }
 function ratesForUsage(modelData, usage) {
-  const rates = { ...modelData.cost };
+  const rates = {
+    ...modelData.cost
+  };
   const contextTokens = usage.input + usage.cacheRead + usage.cacheWrite;
   if (!Array.isArray(rates.tiers))
     return rates;
-  const tiers = rates.tiers.filter(isRecord2).map((tier) => ({ rates: tier, tier: isRecord2(tier.tier) ? tier.tier : {} })).filter((item) => item.tier.type === "context" && typeof item.tier.size === "number").sort((left, right) => Number(left.tier.size) - Number(right.tier.size));
+  const tiers = rates.tiers.filter(isRecord2).map((tier) => ({
+    rates: tier,
+    tier: isRecord2(tier.tier) ? tier.tier : {}
+  })).filter((item) => item.tier.type === "context" && typeof item.tier.size === "number").sort((left, right) => Number(left.tier.size) - Number(right.tier.size));
   for (const item of tiers) {
     if (contextTokens <= Number(item.tier.size))
       continue;
@@ -290,7 +331,10 @@ function aggregate(records, pricing, cutoff) {
     total.pricedCostUsd += usage.pricedCostUsd;
     total.unpricedMessages += usage.unpricedMessages;
   }
-  return { models: result, total: finishUsage(total) };
+  return {
+    models: result,
+    total: finishUsage(total)
+  };
 }
 async function loadUsageReport(options = {}) {
   const generatedAt = Date.now();
@@ -299,10 +343,11 @@ async function loadUsageReport(options = {}) {
   const records = readUsage(dbPath);
   let pricing = {};
   let pricingWarning;
-  const [pricingResult, codex] = await Promise.all([
-    loadPricing(pricingUrl).then((value) => ({ value }), (error) => ({ error })),
-    loadCodexReport()
-  ]);
+  const [pricingResult, codex] = await Promise.all([loadPricing(pricingUrl).then((value) => ({
+    value
+  }), (error) => ({
+    error
+  })), loadCodexReport()]);
   if ("value" in pricingResult)
     pricing = pricingResult.value;
   else
@@ -319,7 +364,12 @@ async function loadUsageReport(options = {}) {
       if (usage.unpricedMessages)
         unpriced.add(recorded);
     }
-    return { id: window.id, label: window.label, startsAt, ...result };
+    return {
+      id: window.id,
+      label: window.label,
+      startsAt,
+      ...result
+    };
   });
   return {
     generatedAt,

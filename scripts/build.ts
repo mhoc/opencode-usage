@@ -1,4 +1,13 @@
-import solidPlugin from "@opentui/solid/bun-plugin"
+import { runtimeModuleIdForSpecifier } from "@opentui/core/runtime-plugin"
+import { createSolidTransformPlugin } from "@opentui/solid/bun-plugin"
+
+const hostModules = new Set(["@opentui/solid", "solid-js"])
+const solidPlugin = createSolidTransformPlugin({
+  moduleName: runtimeModuleIdForSpecifier("@opentui/solid"),
+  resolvePath(specifier) {
+    return hostModules.has(specifier) ? runtimeModuleIdForSpecifier(specifier) : null
+  },
+})
 
 const result = await Bun.build({
   entrypoints: ["src/index.tsx"],
