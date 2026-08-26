@@ -2,6 +2,8 @@
 
 `/usagex` opens a native OpenCode TUI modal with optional Codex subscription limits plus Day, Week, Month, and All Time token windows.
 
+<img width="1025" height="447" alt="Screenshot 2026-08-26 at 4 14 35 PM" src="https://github.com/user-attachments/assets/5e1b9925-e4bf-4c18-8f94-a693ad797725" />
+
 ## Installation
 
 Copy and paste this prompt into OpenCode:
