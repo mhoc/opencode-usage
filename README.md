@@ -2,6 +2,19 @@
 
 `/usagex` opens a native OpenCode TUI modal with optional Codex subscription limits plus Day, Week, Month, and All Time token windows.
 
+## Installation
+
+Copy and paste this prompt into OpenCode:
+
+```text
+Install the OpenCode TUI plugin from `github:mhoc/opencode-usage`.
+
+Update `~/.config/opencode/tui.json` so its `plugin` array includes
+`"github:mhoc/opencode-usage"`. Preserve all existing configuration and plugin
+entries. Validate the resulting JSON, but do not modify `opencode.json` or
+`opencode.jsonc`. When finished, tell me to restart OpenCode and run `/usagex`.
+```
+
 ## OpenCode plugin
 
 Install the repository and register its TUI package entrypoint in OpenCode's global `tui.json` configuration:
