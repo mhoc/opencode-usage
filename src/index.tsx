@@ -1,8 +1,8 @@
 /** @jsxImportSource @opentui/solid */
-import { useTerminalDimensions } from "@opentui/solid"
-import { useBindings } from "@opentui/keymap/solid"
-import { createResource, createSignal, For, Show } from "solid-js"
+import type { BoxRenderable } from "@opentui/core"
+import { createResource, createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import {
+  type KeyEvent,
   type TuiPlugin,
   type TuiPluginApi,
   type TuiPluginModule,
@@ -171,7 +171,7 @@ function CodexView(props: { report: CodexReport; api: TuiPluginApi; compact: boo
 
       <box flexGrow={1} />
       <text fg={theme.textMuted}>
-        OpenAI subscription data · updated {new Date(props.report.fetchedAt).toLocaleTimeString()} · r to refresh
+        OpenAI subscription data · updated {new Date(props.report.fetchedAt).toLocaleTimeString()}
       </text>
     </box>
   )
@@ -206,7 +206,8 @@ function UsageModal(props: {
   options: UsageOptions
   close: () => void
 }) {
-  const dimensions = useTerminalDimensions()
+  let modal: BoxRenderable | undefined
+  const dimensions = () => ({ width: props.api.renderer.width, height: props.api.renderer.height })
   const [active, setActive] = createSignal(0)
   const [offset, setOffset] = createSignal(0)
   const [report, { refetch }] = createResource(() => loadUsageReport(props.options))
@@ -242,23 +243,33 @@ function UsageModal(props: {
     setOffset((value) => Math.max(0, Math.min(max, value + delta)))
   }
 
-  useBindings(() => ({
-    priority: 1000,
-    bindings: [
-      { key: "escape", cmd: props.close },
-      { key: "q", cmd: props.close },
-      { key: "left", cmd: () => selectWindow(active() - 1) },
-      { key: "h", cmd: () => selectWindow(active() - 1) },
-      { key: "right", cmd: () => selectWindow(active() + 1) },
-      { key: "l", cmd: () => selectWindow(active() + 1) },
-      { key: "tab", cmd: () => selectWindow(active() + 1) },
-      { key: "up", cmd: () => move(-1) },
-      { key: "k", cmd: () => move(-1) },
-      { key: "down", cmd: () => move(1) },
-      { key: "j", cmd: () => move(1) },
-      { key: "r", cmd: () => void refetch() },
-    ],
-  }))
+  const onKeyDown = (event: KeyEvent) => {
+    if (event.name === "escape" || event.name === "q") props.close()
+    else if (event.name === "left" || event.name === "h") selectWindow(active() - 1)
+    else if (event.name === "right" || event.name === "l") selectWindow(active() + 1)
+    else return
+    event.preventDefault()
+    event.stopPropagation()
+  }
+  let disposeKeymap: (() => void) | undefined
+  onMount(() => {
+    modal?.focus()
+    if (!modal) return
+    disposeKeymap = props.api.keymap.registerLayer({
+      target: modal,
+      targetMode: "focus",
+      priority: 1000,
+      bindings: [
+        { key: "escape", cmd: props.close },
+        { key: "q", cmd: props.close },
+        { key: "left", cmd: () => selectWindow(active() - 1) },
+        { key: "h", cmd: () => selectWindow(active() - 1) },
+        { key: "right", cmd: () => selectWindow(active() + 1) },
+        { key: "l", cmd: () => selectWindow(active() + 1) },
+      ],
+    })
+  })
+  onCleanup(() => disposeKeymap?.())
 
   const theme = () => props.api.theme.current
 
@@ -273,15 +284,23 @@ function UsageModal(props: {
           paddingRight={2}
           flexDirection="column"
           gap={1}
+          focusable
+          ref={(value) => (modal = value)}
+          onKeyDown={onKeyDown}
         >
           <box flexDirection="row" justifyContent="space-between">
             <text fg={theme().text}>
               <b>OpenCode Usage</b>
               <span style={{ fg: theme().textMuted }}>  local tokens and API-equivalent cost</span>
             </text>
-            <Show when={!compact()}>
-              <text fg={theme().textMuted}>←/→ window  ↑/↓ scroll  r refresh  esc close</text>
-            </Show>
+            <box flexDirection="row" gap={2}>
+              <Show when={!compact()}>
+                <text fg={theme().textMuted}>←/→ change window  esc close</text>
+              </Show>
+              <box onMouseUp={() => void refetch()}>
+                <text fg={theme().primary}>refresh</text>
+              </box>
+            </box>
           </box>
 
           <Show when={report()} fallback={<text fg={theme().textMuted}>Loading usage and current pricing…</text>}>

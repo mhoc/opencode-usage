@@ -19,7 +19,7 @@ Then run:
 /usagex
 ```
 
-Use left/right (or `h`/`l`) to change windows, up/down (or `j`/`k`) to page through models, `r` to refresh, and `Esc` to close. The command opens locally without invoking an LLM or adding a message to the current session.
+Use left/right (or `h`/`l`) or click a tab to change windows, click `refresh` to reload usage, and press `Esc` to close. The command opens locally without invoking an LLM or adding a message to the current session.
 
 The plugin reads `OPENCODE_DB` only through its configured `db` option; otherwise it uses `$XDG_DATA_HOME/opencode/opencode.db` or `~/.local/share/opencode/opencode.db`. Its optional `pricingUrl` setting defaults to models.dev.
 
